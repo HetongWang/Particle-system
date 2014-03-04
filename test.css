@@ -1,0 +1,17 @@
+#canvas {
+	border: 2px solid black;
+	width: 800px;
+	height: 600px;
+	float: left;
+}
+#start-button {
+	font-size: 22px;
+	height: 50px;
+	width: 100px;
+}
+table {
+	float: left;
+	line-height: 50px;
+	margin-left: 20px;
+	width: 100px;
+}
