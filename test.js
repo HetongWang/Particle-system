@@ -1,7 +1,7 @@
 // Data parts Start
 var snake = {
-	x[0] : 10,
-	y[0] : 10,
+	x : [10],
+	y : [10],
 	len : 1
 };
 var apple = {
@@ -20,9 +20,10 @@ var speed = 500,
 
 // Code parts Start
 function config() {
-	setTimeout(controller(),speed);
+	setTimeout("controller()",speed);
 	// g.fillRect(Unit, Unit, Unit, Unit); //test code
 }
+
 
 function controller() {
 	moveFlag = 0;
@@ -52,7 +53,8 @@ function controller() {
 		}
 	}
 	view();
-	document.addEventListener("keydown", move, false);
+	document.addEventListener("keypress", move, false);
+	setTimeout("controller()",speed);
 }
 
 function view() {
@@ -67,16 +69,16 @@ function view() {
 	}
 
 	// draw Snakes
-	function drawSnakes() {
+	(function() {
 		g.fillStyle = "#000";
 		for (var i = 0; i < snake.len; i++) {
 			g.fillRect(toRealxy(snake.x[i]), toRealxy(snake.y[i]), Unit, Unit);
 		}
-	}();
+	})();
 
 	// draw Apple
-	function drawApple() {
+	(function() {
 		g.fillStyle = "#f00";
 		g.fillRect(toRealxy(apple.x), toRealxy(apple.y), Unit, Unit);
-	}
+	})();
 }
