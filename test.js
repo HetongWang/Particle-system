@@ -1,14 +1,22 @@
 // creat snake Object
 var snake = {
-	hx : 10,
-	hy : 10,
+	x[1] : 10,
+	y[1] : 10,
 	len : 1
 };
 var apple = {
 	x : 5,
-	y : 5
-}
-var speed = 500;
+	y : 5,
+	creat : function() {
+		function random(n) {
+			return Math.floor(Math.random() * n + 1);
+		}
+		this.x = random(canvas.width / Unit);
+		this.y = random(canvas.height / Unit);
+	}
+};
+var speed = 500,
+		drawFlag = 0;
 
 function config() {
 	setTimeout(controller(),speed);
@@ -16,7 +24,21 @@ function config() {
 }
 
 function controller() {
-
+	drawFlag = 0;
+	function move(e) {
+		if (drawFlag == 0) {
+			if (e.keycode == 37)			
+				snake.x[1]--;
+			else if (e.keycode == 38)
+				snake.y[1]--;
+			else if (e.keycode == 39)
+				snake.x[1]++;
+			else if (e.keycode == 40)
+				snake.y[1]++; 
+			drawFlag = 1;
+		}
+	}
+	document.addEventListener("keydown", move, false);
 }
 
 function view() {
@@ -33,14 +55,5 @@ function view() {
 	// draw Snakes
 	function drawSnakes() {
 
-	}
-
-	// draw Apple
-	function creatApple() {
-		function random(n) {
-			return Math.floor(Math.random() * n + 1);
-		}
-		var x = random(canvas.width / Unit),
-				y = random(canvas.height / Unit);
 	}
 }
