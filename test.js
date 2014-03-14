@@ -1,7 +1,7 @@
-// creat snake Object
+// Data parts Start
 var snake = {
-	x[1] : 10,
-	y[1] : 10,
+	x[0] : 10,
+	y[0] : 10,
 	len : 1
 };
 var apple = {
@@ -16,28 +16,42 @@ var apple = {
 	}
 };
 var speed = 500,
-		drawFlag = 0;
+		moveFlag = 0;
 
+// Code parts Start
 function config() {
 	setTimeout(controller(),speed);
 	// g.fillRect(Unit, Unit, Unit, Unit); //test code
 }
 
 function controller() {
-	drawFlag = 0;
+	moveFlag = 0;
+	// deal the movement of snake
 	function move(e) {
-		if (drawFlag == 0) {
+		if (moveFlag == 0) {
 			if (e.keycode == 37)			
-				snake.x[1]--;
+				snake.x[0]--;
 			else if (e.keycode == 38)
-				snake.y[1]--;
+				snake.y[0]--;
 			else if (e.keycode == 39)
-				snake.x[1]++;
+				snake.x[0]++;
 			else if (e.keycode == 40)
-				snake.y[1]++; 
-			drawFlag = 1;
+				snake.y[0]++; 
+			// if snake eat apple
+			if (snake.x[0] == apple.x && snake.y[0] == apple.y) {
+				snake.len++;
+				apple.creat();
+			}
+			// 
+			for (var i = 1; i < snake.len; i++)
+			{
+				snake.x[i] = snake.x[i-1];
+				snake.y[i] = snake.y[i-1];
+			}
+			moveFlag = 1;
 		}
 	}
+	view();
 	document.addEventListener("keydown", move, false);
 }
 
@@ -54,6 +68,15 @@ function view() {
 
 	// draw Snakes
 	function drawSnakes() {
+		g.fillStyle = "#000";
+		for (var i = 0; i < snake.len; i++) {
+			g.fillRect(toRealxy(snake.x[i]), toRealxy(snake.y[i]), Unit, Unit);
+		}
+	}();
 
+	// draw Apple
+	function drawApple() {
+		g.fillStyle = "#f00";
+		g.fillRect(toRealxy(apple.x), toRealxy(apple.y), Unit, Unit);
 	}
 }
