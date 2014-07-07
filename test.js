@@ -42,9 +42,12 @@ $(function() {
         this.last_update = Date.now();
         return;
       }
+      this.updata_settings();
       var that = this;
       var time = Date.now();
       var dt = time - this.last_update;
+      var temp = this.settings.emission_rate / 100;
+      this.emission_delay = 10 / temp;
       this.last_emission += dt;
       this.last_update = time;
       if (this.last_emission > this.emission_delay) {
@@ -74,7 +77,20 @@ $(function() {
         if (particle.get('life') < particle.get('lived'))
           that.remove(particle);
       });
-      
+    },
+    updata_settings: function() {
+      this.settings = {
+       emission_rate: parseInt($('input[name=rate]').val()),
+       min_life: parseInt($('input[name=min_life]').val()),
+       life_range: parseInt($('input[name=life_range]').val()),
+       min_angle: parseInt($('input[name=min_angle]').val()),
+       angle_range: parseInt($('input[name=angle_range]').val()),
+       min_speed: parseInt($('input[name=min_speed]').val()),
+       speed_range: parseInt($('input[name=speed_range]').val()),
+       min_size: parseInt($('input[name=min_size]').val()),
+       size_range: parseInt($('input[name=size_range]').val()),
+       color: $('input[name=color]').val()
+      };
     },
   });
 
@@ -83,8 +99,8 @@ $(function() {
   var View = Backbone.View.extend({
     el: $('#canvas'),
     initialize: function() {
-      $('#canvas')[0].width = 1280;
-      $('#canvas')[0].height = 960;
+      $('#canvas')[0].width = $('#canvas').width() * 1.6;
+      $('#canvas')[0].height = $('#canvas').height() * 1.6;
       emitter.pos_x = this.el.width / 2;
       emitter.pos_y = this.el.height / 2;
       emitter.ctx.fillStyle = emitter.settings.color;
