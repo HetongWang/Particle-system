@@ -1,84 +1,109 @@
-// Data parts Start
-var snake = {
-	x : [10],
-	y : [10],
-	len : 1
-};
-var apple = {
-	x : 5,
-	y : 5,
-	creat : function() {
-		function random(n) {
-			return Math.floor(Math.random() * n + 1);
-		}
-		this.x = random(canvas.width / Unit);
-		this.y = random(canvas.height / Unit);
-	}
-};
-var speed = 500,
-		moveFlag = 0;
+$(function() {
 
-// Code parts Start
-function config() {
-	setTimeout("controller()",speed);
-	// g.fillRect(Unit, Unit, Unit, Unit); //test code
-}
+  var Particle = Backbone.Model.extend({
+    initialize: function() {
+      var radians = this.get('angle') * Math.PI / 180;
+      this.set({
+          vel_x: Math.cos(radians) * this.get('speed'),
+          vel_y: Math.sin(radians) * this.get('speed')
+      })
+    },
+    defaults: {
+      pos_x: 0,
+      pos_y: 0,
+      speed: 5,
+      life: 1,
+      size: 2,
+      lived: 0
+    },
+  });
 
+  var Emitter = Backbone.Collection.extend({
+    settings: {
+       emission_rate: 50,
+       min_life: 5,
+       life_range: 2,
+       min_angle: 0,
+       angle_range: 360,
+       min_speed: 50,
+       speed_range: 15,
+       min_size: 1,
+       size_range: 1,
+       color: '#011'
+    },
+    pos_x: 0,
+    pos_y: 0,
+    emission_delay: 15,
+    last_update: 0,
+    last_emission: 0,
+    ctx: document.getElementById('canvas').getContext('2d'),
+    updata: function() {
+      if (!this.last_update) {
+        this.last_update = Date.now();
+        return;
+      }
+      var that = this;
+      var time = Date.now();
+      var dt = time - this.last_update;
+      this.last_emission += dt;
+      this.last_update = time;
+      if (this.last_emission > this.emission_delay) {
+        var i = Math.floor(this.last_emission / this.emission_delay);
+        this.last_emission -= i * this.emission_delay;
+        while (i--) {
+          var particle = new Particle({
+            angle: this.settings.min_angle + Math.random() * this.settings.angle_range,
+            speed: this.settings.min_speed + Math.random() * this.settings.speed_range,
+            size:  this.settings.min_size + Math.random() * this.settings.size_range,
+            life:  this.settings.min_life + Math.random() * this.settings.life_range
+          });
+          this.add(particle);
+        }
+      }
+      dt /= 1000;
+      this.each(function(particle) {
+        var pos_x = particle.get('pos_x'),
+            pos_y = particle.get('pos_y');
+        var vel_x = particle.get('vel_x'),
+            vel_y = particle.get('vel_y');
+        pos_x += vel_x * dt;
+        pos_y += vel_y * dt;
+        particle.set({pos_x: pos_x});
+        particle.set({pos_y: pos_y});
+        particle.set({lived: particle.get('lived') + dt});
+        if (particle.get('life') < particle.get('lived'))
+          that.remove(particle);
+      });
+      
+    },
+  });
 
-function controller() {
-	moveFlag = 0;
-	// deal the movement of snake
-	function move(e) {
-		if (moveFlag == 0) {
-			if (e.keycode == 37)			
-				snake.x[0]--;
-			else if (e.keycode == 38)
-				snake.y[0]--;
-			else if (e.keycode == 39)
-				snake.x[0]++;
-			else if (e.keycode == 40)
-				snake.y[0]++; 
-			// if snake eat apple
-			if (snake.x[0] == apple.x && snake.y[0] == apple.y) {
-				snake.len++;
-				apple.creat();
-			}
-			// 
-			for (var i = 1; i < snake.len; i++)
-			{
-				snake.x[i] = snake.x[i-1];
-				snake.y[i] = snake.y[i-1];
-			}
-			moveFlag = 1;
-		}
-	}
-	view();
-	document.addEventListener("keypress", move, false);
-	setTimeout("controller()",speed);
-}
+  var emitter = new Emitter;
 
-function view() {
-	var canvas = document.getElementById("canvas"),
-			g = canvas.getContext("2d");
-	var Unit = 25;
-	canvas.width = 800; //32 colum
-	canvas.height = 600; //24 row 
-	// transform coordinate to px
-	function toRealxy(n) {
-		return n * Unit;
-	}
+  var View = Backbone.View.extend({
+    el: $('#canvas'),
+    initialize: function() {
+      $('#canvas')[0].width = 1280;
+      $('#canvas')[0].height = 960;
+      emitter.pos_x = this.el.width / 2;
+      emitter.pos_y = this.el.height / 2;
+      emitter.ctx.fillStyle = emitter.settings.color;
+      window.requestAnimationFrame(this.animate.bind(this));
+    },
+    animate: function() {
+      emitter.ctx.clearRect(0, 0, this.el.width, this.el.height);
+      emitter.updata();
+      emitter.each(this.darwParticle);
+      window.requestAnimationFrame(this.animate.bind(this));
+    },
+    darwParticle: function(particle) {
+      var x = particle.get('pos_x') + emitter.pos_x;
+      var y = particle.get('pos_y') + emitter.pos_y;
+      emitter.ctx.beginPath();
+      emitter.ctx.arc(x, y, particle.get('size'), 0, Math.PI * 2);
+      emitter.ctx.fill();
+    }
+  });
 
-	// draw Snakes
-	(function() {
-		g.fillStyle = "#000";
-		for (var i = 0; i < snake.len; i++) {
-			g.fillRect(toRealxy(snake.x[i]), toRealxy(snake.y[i]), Unit, Unit);
-		}
-	})();
-
-	// draw Apple
-	(function() {
-		g.fillStyle = "#f00";
-		g.fillRect(toRealxy(apple.x), toRealxy(apple.y), Unit, Unit);
-	})();
-}
+  var view = new View;
+});
