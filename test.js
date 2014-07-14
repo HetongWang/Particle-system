@@ -29,7 +29,14 @@ $(function() {
        speed_range: 15,
        min_size: 1,
        size_range: 1,
-       color: '#011'
+       start_colors: [
+          [130, 196, 245, 1],
+          [69, 152, 212, 1]
+       ],
+       end_colors: [
+          [130, 196, 245, 0],
+          [69, 152, 212, 0]
+       ]
     },
     pos_x: 0,
     pos_y: 0,
@@ -54,11 +61,22 @@ $(function() {
         var i = Math.floor(this.last_emission / this.emission_delay);
         this.last_emission -= i * this.emission_delay;
         while (i--) {
+          var start_color = this.settings.start_colors[Math.floor(this.settings.start_colors.length * Math.random())];
+          var end_color = this.settings.end_colors[Math.floor(this.settings.end_colors.length * Math.random())];
+          var life = this.settings.min_life + Math.random() * this.settings.life_range;
+          var color_step = [
+            (end_color[0] - start_color[0]) / life,
+            (end_color[1] - start_color[1]) / life,
+            (end_color[2] - start_color[2]) / life,
+            (end_color[3] - start_color[3]) / life,
+          ];
           var particle = new Particle({
             angle: this.settings.min_angle + Math.random() * this.settings.angle_range,
             speed: this.settings.min_speed + Math.random() * this.settings.speed_range,
             size:  this.settings.min_size + Math.random() * this.settings.size_range,
-            life:  this.settings.min_life + Math.random() * this.settings.life_range
+            life:  life,
+            color: start_color.slice(),
+            color_step: color_step
           });
           this.add(particle);
         }
@@ -69,8 +87,15 @@ $(function() {
             pos_y = particle.get('pos_y');
         var vel_x = particle.get('vel_x'),
             vel_y = particle.get('vel_y');
+        var color = particle.get('color');
+        var step  = particle.get('color_step');
         pos_x += vel_x * dt;
         pos_y += vel_y * dt;
+        color[0] += step[0] * dt;
+        color[1] += step[1] * dt;
+        color[2] += step[2] * dt;
+        color[3] += step[3] * dt;
+        particle.set({color: color});
         particle.set({pos_x: pos_x});
         particle.set({pos_y: pos_y});
         particle.set({lived: particle.get('lived') + dt});
@@ -79,18 +104,15 @@ $(function() {
       });
     },
     updata_settings: function() {
-      this.settings = {
-       emission_rate: parseInt($('input[name=rate]').val()),
-       min_life: parseInt($('input[name=min_life]').val()),
-       life_range: parseInt($('input[name=life_range]').val()),
-       min_angle: parseInt($('input[name=min_angle]').val()),
-       angle_range: parseInt($('input[name=angle_range]').val()),
-       min_speed: parseInt($('input[name=min_speed]').val()),
-       speed_range: parseInt($('input[name=speed_range]').val()),
-       min_size: parseInt($('input[name=min_size]').val()),
-       size_range: parseInt($('input[name=size_range]').val()),
-       color: $('input[name=color]').val()
-      };
+      this.settings.emission_rate = parseInt($('input[name=rate]').val());
+      this.settings.min_life = parseInt($('input[name=min_life]').val());
+      this.settings.life_range = parseInt($('input[name=life_range]').val());
+      this.settings.min_angle = parseInt($('input[name=min_angle]').val());
+      this.settings.angle_range = parseInt($('input[name=angle_range]').val());
+      this.settings.min_speed = parseInt($('input[name=min_speed]').val());
+      this.settings.speed_range = parseInt($('input[name=speed_range]').val());
+      this.settings.min_size = parseInt($('input[name=min_size]').val());
+      this.settings.size_range = parseInt($('input[name=size_range]').val());
     },
   });
 
@@ -103,7 +125,6 @@ $(function() {
       $('#canvas')[0].height = $('#canvas').height() * 1.6;
       emitter.pos_x = this.el.width / 2;
       emitter.pos_y = this.el.height / 2;
-      emitter.ctx.fillStyle = emitter.settings.color;
       window.requestAnimationFrame(this.animate.bind(this));
     },
     animate: function() {
@@ -115,7 +136,13 @@ $(function() {
     darwParticle: function(particle) {
       var x = particle.get('pos_x') + emitter.pos_x;
       var y = particle.get('pos_y') + emitter.pos_y;
+      var color = particle.get('color');
       emitter.ctx.beginPath();
+      emitter.ctx.fillStyle = 'rgba(' + 
+        Math.round(color[0]) + ',' +
+        Math.round(color[1]) + ',' +
+        Math.round(color[2]) + ',' +
+        color[3] + ')';
       emitter.ctx.arc(x, y, particle.get('size'), 0, Math.PI * 2);
       emitter.ctx.fill();
     }
