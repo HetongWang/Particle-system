@@ -20,23 +20,29 @@ $(function() {
 
   var Emitter = Backbone.Collection.extend({
     settings: {
-       emission_rate: 50,
-       min_life: 5,
-       life_range: 2,
-       min_angle: 0,
-       angle_range: 360,
-       min_speed: 50,
-       speed_range: 15,
-       min_size: 1,
-       size_range: 1,
-       start_colors: [
-          [130, 196, 245, 1],
-          [69, 152, 212, 1]
-       ],
-       end_colors: [
-          [130, 196, 245, 0],
-          [69, 152, 212, 0]
-       ]
+      emission_rate: 50,
+      min_life: 5,
+      life_range: 2,
+      min_angle: 0,
+      angle_range: 360,
+      min_speed: 50,
+      speed_range: 15,
+      min_size: 1,
+      size_range: 1,
+      start_colors: [
+        [130, 196, 245, 0.9],
+        [69, 152, 212, 1],
+        [152, 72, 67, 0.8]
+      ],
+      end_colors: [
+        [130, 196, 245, 0],
+        [69, 152, 212, 0],
+        [243, 2, 25, 0]
+      ],
+      gravity: {
+        x: 0,
+        y: 60
+      }
     },
     pos_x: 0,
     pos_y: 0,
@@ -89,6 +95,8 @@ $(function() {
             vel_y = particle.get('vel_y');
         var color = particle.get('color');
         var step  = particle.get('color_step');
+        vel_x += that.settings.gravity.x * dt;
+        vel_y += that.settings.gravity.y * dt;
         pos_x += vel_x * dt;
         pos_y += vel_y * dt;
         color[0] += step[0] * dt;
@@ -98,6 +106,8 @@ $(function() {
         particle.set({color: color});
         particle.set({pos_x: pos_x});
         particle.set({pos_y: pos_y});
+        particle.set({vel_x: vel_x});
+        particle.set({vel_y: vel_y});
         particle.set({lived: particle.get('lived') + dt});
         if (particle.get('life') < particle.get('lived'))
           that.remove(particle);
@@ -113,7 +123,9 @@ $(function() {
       this.settings.speed_range = parseInt($('input[name=speed_range]').val());
       this.settings.min_size = parseInt($('input[name=min_size]').val());
       this.settings.size_range = parseInt($('input[name=size_range]').val());
-    },
+      this.settings.gravity.x = parseInt($('input[name=gravity_x]').val());
+      this.settings.gravity.y = parseInt($('input[name=gravity_y]').val());
+    }
   });
 
   var emitter = new Emitter;
