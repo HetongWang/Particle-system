@@ -42,7 +42,15 @@ $(function() {
       gravity: {
         x: 0,
         y: 60
-      }
+      },
+      min_pos: {
+        x: -50,
+        y: -50
+      },
+      pos_range: {
+        x: 100,
+        y: 100
+      },
     },
     pos_x: 0,
     pos_y: 0,
@@ -76,13 +84,17 @@ $(function() {
             (end_color[2] - start_color[2]) / life,
             (end_color[3] - start_color[3]) / life,
           ];
+          var pos_x = this.settings.min_pos.x + this.settings.pos_range.x * Math.random();
+          var pos_y = this.settings.min_pos.y + this.settings.pos_range.y * Math.random();
           var particle = new Particle({
             angle: this.settings.min_angle + Math.random() * this.settings.angle_range,
             speed: this.settings.min_speed + Math.random() * this.settings.speed_range,
             size:  this.settings.min_size + Math.random() * this.settings.size_range,
             life:  life,
             color: start_color.slice(),
-            color_step: color_step
+            color_step: color_step,
+            pos_x: pos_x,
+            pos_y: pos_y
           });
           this.add(particle);
         }
@@ -114,7 +126,7 @@ $(function() {
       });
     },
     updata_settings: function() {
-      this.settings.emission_rate = parseInt($('input[name=rate]').val());
+      this.settings.emission_rate = parseInt($('input[name=emission_rate]').val());
       this.settings.min_life = parseInt($('input[name=min_life]').val());
       this.settings.life_range = parseInt($('input[name=life_range]').val());
       this.settings.min_angle = parseInt($('input[name=min_angle]').val());
@@ -133,8 +145,8 @@ $(function() {
   var View = Backbone.View.extend({
     el: $('#canvas'),
     initialize: function() {
-      $('#canvas')[0].width = $('#canvas').width() * 1.6;
-      $('#canvas')[0].height = $('#canvas').height() * 1.6;
+      $('#canvas')[0].width = $('#canvas').width() * 1.5;
+      $('#canvas')[0].height = $('#canvas').height() * 1.5;
       emitter.pos_x = this.el.width / 2;
       emitter.pos_y = this.el.height / 2;
       window.requestAnimationFrame(this.animate.bind(this));
