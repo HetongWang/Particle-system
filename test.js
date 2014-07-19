@@ -44,12 +44,12 @@ $(function() {
         y: 60
       },
       min_pos: {
-        x: -50,
-        y: -50
+        x: 0,
+        y: 0
       },
       pos_range: {
-        x: 100,
-        y: 100
+        x: 0,
+        y: 0
       },
     },
     pos_x: 0,
