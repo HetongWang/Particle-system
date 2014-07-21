@@ -3,8 +3,8 @@ body {
 }
 #canvas {
 	border: 2px solid white;
-	width: 640px;
-	height: 480px;
+	width: 800px;
+	height: 600px;
 	float: left;
 }
 #start-button {
