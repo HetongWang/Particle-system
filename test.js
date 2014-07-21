@@ -1,176 +1,183 @@
 $(function() {
-
-  var Particle = Backbone.Model.extend({
-    initialize: function() {
-      var radians = this.get('angle') * Math.PI / 180;
-      this.set({
-          vel_x: Math.cos(radians) * this.get('speed'),
-          vel_y: Math.sin(radians) * this.get('speed')
-      })
-    },
-    defaults: {
-      pos_x: 0,
-      pos_y: 0,
-      speed: 5,
-      life: 1,
-      size: 2,
-      lived: 0
-    },
-  });
-
-  var Emitter = Backbone.Collection.extend({
-    settings: {
-      emission_rate: 50,
-      min_life: 5,
-      life_range: 2,
-      min_angle: 0,
-      angle_range: 360,
-      min_speed: 50,
-      speed_range: 15,
-      min_size: 1,
-      size_range: 1,
-      start_colors: [
-        [130, 196, 245, 0.9],
-        [69, 152, 212, 1],
-        [152, 72, 67, 0.8]
-      ],
-      end_colors: [
-        [130, 196, 245, 0],
-        [69, 152, 212, 0],
-        [243, 2, 25, 0]
-      ],
-      gravity: {
-        x: 0,
-        y: 60
-      },
-      min_pos: {
-        x: 0,
-        y: 0
-      },
-      pos_range: {
-        x: 0,
-        y: 0
-      },
-    },
-    pos_x: 0,
-    pos_y: 0,
-    emission_delay: 15,
-    last_update: 0,
-    last_emission: 0,
-    ctx: document.getElementById('canvas').getContext('2d'),
-    updata: function() {
-      if (!this.last_update) {
-        this.last_update = Date.now();
-        return;
-      }
-      this.updata_settings();
-      var that = this;
-      var time = Date.now();
-      var dt = time - this.last_update;
-      var temp = this.settings.emission_rate / 100;
-      this.emission_delay = 10 / temp;
-      this.last_emission += dt;
-      this.last_update = time;
-      if (this.last_emission > this.emission_delay) {
-        var i = Math.floor(this.last_emission / this.emission_delay);
-        this.last_emission -= i * this.emission_delay;
-        while (i--) {
-          var start_color = this.settings.start_colors[Math.floor(this.settings.start_colors.length * Math.random())];
-          var end_color = this.settings.end_colors[Math.floor(this.settings.end_colors.length * Math.random())];
-          var life = this.settings.min_life + Math.random() * this.settings.life_range;
-          var color_step = [
-            (end_color[0] - start_color[0]) / life,
-            (end_color[1] - start_color[1]) / life,
-            (end_color[2] - start_color[2]) / life,
-            (end_color[3] - start_color[3]) / life,
-          ];
-          var pos_x = this.settings.min_pos.x + this.settings.pos_range.x * Math.random();
-          var pos_y = this.settings.min_pos.y + this.settings.pos_range.y * Math.random();
-          var particle = new Particle({
-            angle: this.settings.min_angle + Math.random() * this.settings.angle_range,
-            speed: this.settings.min_speed + Math.random() * this.settings.speed_range,
-            size:  this.settings.min_size + Math.random() * this.settings.size_range,
-            life:  life,
-            color: start_color.slice(),
-            color_step: color_step,
-            pos_x: pos_x,
-            pos_y: pos_y
-          });
-          this.add(particle);
-        }
-      }
-      dt /= 1000;
-      this.each(function(particle) {
-        var pos_x = particle.get('pos_x'),
-            pos_y = particle.get('pos_y');
-        var vel_x = particle.get('vel_x'),
-            vel_y = particle.get('vel_y');
-        var color = particle.get('color');
-        var step  = particle.get('color_step');
-        vel_x += that.settings.gravity.x * dt;
-        vel_y += that.settings.gravity.y * dt;
-        pos_x += vel_x * dt;
-        pos_y += vel_y * dt;
-        color[0] += step[0] * dt;
-        color[1] += step[1] * dt;
-        color[2] += step[2] * dt;
-        color[3] += step[3] * dt;
-        particle.set({color: color});
-        particle.set({pos_x: pos_x});
-        particle.set({pos_y: pos_y});
-        particle.set({vel_x: vel_x});
-        particle.set({vel_y: vel_y});
-        particle.set({lived: particle.get('lived') + dt});
-        if (particle.get('life') < particle.get('lived'))
-          that.remove(particle);
-      });
-    },
-    updata_settings: function() {
-      this.settings.emission_rate = parseInt($('input[name=emission_rate]').val());
-      this.settings.min_life = parseInt($('input[name=min_life]').val());
-      this.settings.life_range = parseInt($('input[name=life_range]').val());
-      this.settings.min_angle = parseInt($('input[name=min_angle]').val());
-      this.settings.angle_range = parseInt($('input[name=angle_range]').val());
-      this.settings.min_speed = parseInt($('input[name=min_speed]').val());
-      this.settings.speed_range = parseInt($('input[name=speed_range]').val());
-      this.settings.min_size = parseInt($('input[name=min_size]').val());
-      this.settings.size_range = parseInt($('input[name=size_range]').val());
-      this.settings.gravity.x = parseInt($('input[name=gravity_x]').val());
-      this.settings.gravity.y = parseInt($('input[name=gravity_y]').val());
-    }
-  });
-
-  var emitter = new Emitter;
-
-  var View = Backbone.View.extend({
-    el: $('#canvas'),
-    initialize: function() {
-      $('#canvas')[0].width = $('#canvas').width() * 1.5;
-      $('#canvas')[0].height = $('#canvas').height() * 1.5;
-      emitter.pos_x = this.el.width / 2;
-      emitter.pos_y = this.el.height / 2;
-      window.requestAnimationFrame(this.animate.bind(this));
-    },
-    animate: function() {
-      emitter.ctx.clearRect(0, 0, this.el.width, this.el.height);
-      emitter.updata();
-      emitter.each(this.darwParticle);
-      window.requestAnimationFrame(this.animate.bind(this));
-    },
-    darwParticle: function(particle) {
-      var x = particle.get('pos_x') + emitter.pos_x;
-      var y = particle.get('pos_y') + emitter.pos_y;
-      var color = particle.get('color');
-      emitter.ctx.beginPath();
-      emitter.ctx.fillStyle = 'rgba(' + 
-        Math.round(color[0]) + ',' +
-        Math.round(color[1]) + ',' +
-        Math.round(color[2]) + ',' +
-        color[3] + ')';
-      emitter.ctx.arc(x, y, particle.get('size'), 0, Math.PI * 2);
-      emitter.ctx.fill();
-    }
-  });
-
-  var view = new View;
+  controller = new Controller();
+  controller.init();
+  controller.animate();
 });
+
+Particle = (function() {
+  function Particle(point, velocity) {
+    this.position = point;
+    this.velocity = velocity;
+    this.acceleration = new Vector();
+    this.color = [66,167,222];
+  }
+  Particle.baseColor = [66, 167, 222];
+
+  Particle.prototype.move = function() {
+    this.velocity.x += this.acceleration.x;
+    this.velocity.y += this.acceleration.y;
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+  }
+  
+  // 处理力场对点的影响
+  Particle.prototype.submitToField = function(fields) {
+    for (i = 0; i < fields.length; i++) {
+      var field = fields[i];
+      var dx = this.position.x - field.position.x;
+      var dy = this.position.y - field.position.y;
+
+      // calculate acceleration in axis-x and y
+      // assume m = 1
+      var df = field.mass / Math.pow((dx * dx + dy * dy), 1.5);
+      this.acceleration.x += dx * df;
+      this.acceleration.y += dy * df;
+    }
+  }
+
+  Particle.prototype.colorVariable = function() {
+    var velocity = this.velocity.getMagnitude();
+    this.color[0] = Particle.baseColor[0] * velocity;
+    this.color[2] = Particle.baseColor[2] * .5 / velocity;
+    if (this.color[0] > 255) 
+      this.color[0] = 255;
+  }
+
+  Particle.prototype.color = Particle.prototype.colorVariable;
+
+  return Particle
+})();
+
+Emitter = (function() {
+  function Emitter(point, velocity, spread) {
+    this.position = point;
+    this.velocity = velocity;
+    this.angle = this.velocity.getAngle();
+    this.spread = spread / 180 * Math.PI || Math.PI / 32;
+    this.color = '#999';
+  }
+
+  Emitter.prototype.emitParticle = function() {
+    var magnitude = this.velocity.getMagnitude();
+    var angle = this.angle + (this.spread / 2) - Math.random() * this.spread;
+    return new Particle(this.position, Vector.fromAngle(angle, magnitude));
+  }
+
+  return Emitter;
+})();
+
+Field = (function() {
+  function Field(point, mass) {
+    this.position = point;
+    this.mass = mass || 100;
+  }
+
+  return Field;
+})();
+
+Vector = (function() {
+  function Vector(x, y) {
+    this.x = x || 0;
+    this.y = y || 0; 
+  }
+
+  Vector.prototype.add = function(vector) {
+    this.x += vector.x;
+    this.y += vector.y;
+  }
+
+  Vector.prototype.getMagnitude = function() {
+    return Math.sqrt(this.x * this.x + this.y * this.y);
+  }
+
+  Vector.prototype.getAngle = function() {
+    return Math.atan2(this.y, this.x);
+  }
+
+  Vector.fromAngle = function(angle, magnitude) {
+    return new Vector(Math.cos(angle) * magnitude, Math.sin(angle) * magnitude);
+  }
+
+  return Vector;
+})();
+
+View = (function() {
+  function View(canvas) {
+    this.ctx = canvas.getContext('2d');
+    this.width = canvas.width;
+    this.height = canvas.height;
+  }
+
+  View.prototype.drawParticle = function(particle) {
+    this.ctx.fillStyle = 'rgb(' + particle.color[0] + ',' + particle.color[1] + ',' + particle.color[2] + ')';
+    this.ctx.fillRect(particle.position.x, particle.position.y, 1, 1);
+  }
+
+  View.prototype.clear = function() {
+    this.ctx.clearRect(0, 0, this.width, this.height);
+  }
+
+  return View;
+})();
+
+Controller = (function() {
+  function Controller() {
+    window.requestAnimFrame = (function(callback) {
+      return window.requestAnimationFrame       || 
+             window.webkitRequestAnimationFrame || 
+             window.mozRequestAnimationFrame    || 
+             window.oRequestAnimationFrame      || 
+             window.msRequestAnimationFrame     ||
+             function(callback) {
+               window.setTimeout(callback, 1000 / 60);
+             };
+    })();
+    this.maxParticles = 1000;
+    this.emissionRate = 4;
+    this.view = new View($('canvas')[0]);
+    this.particles = [];
+    this.emitters = [];
+    this.fields = [];
+  }
+
+  Controller.prototype.plotParticles = function(borderX, borderY) {
+    var currentParticles = [];
+    for (var i = 0; i < this.particles.length; i++) {
+      var particle = particles[i];
+      var pos = particle.position;
+      if (pos.x < 0 || pos.y < 0 || pos.x > borderX || pos.y > borderY)
+        continue;
+      particle.submitToField();
+      particle.move();
+      particle.color();
+      currentParticles.push(particle);
+      this.view.drawParticle(particle);
+    }
+    this.particles = currentParticles;
+  }
+
+  Controller.prototype.addNewParticles = function() {
+    if (this.particles.length > this.maxParticles) return;
+    for (var i = 0; i < this.emitters.length; i++) {
+      for  (var j = 0; j < this.emissionRate; j++) {
+        this.particles.push(emitters[i].emitParticle());
+      }
+    }
+  }
+
+  Controller.prototype.init = function() {
+    var vector = new Vector(this.view.width / 3, this.view.height / 2);
+    this.emitters.push(new Emitter(vector, new Vector(0, 2)));
+
+    vector = new Vector(this.view.width / 3 * 2, this.view.height / 2);
+    this.fields.push(new Field(vector));
+  }
+
+  Controller.prototype.animate = function() {
+    this.addNewParticles();
+    this.plotParticles(this.view.width, this.view.height);
+    window.requestAnimationFrame(this.animate).bind(this);
+  }
+
+  return Controller;
+})();

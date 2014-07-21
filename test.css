@@ -1,7 +1,10 @@
+body {
+	background-color: black;
+}
 #canvas {
-	border: 2px solid black;
-	width: 800px;
-	height: 600px;
+	border: 2px solid white;
+	width: 640px;
+	height: 480px;
 	float: left;
 }
 #start-button {
