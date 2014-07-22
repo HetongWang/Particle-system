@@ -53,7 +53,7 @@ Emitter = (function() {
     this.position = point;
     this.velocity = velocity;
     this.angle = this.velocity.getAngle();
-    this.spread = spread / 180 * Math.PI || Math.PI / 4;
+    this.spread = spread / 180 * Math.PI || Math.PI / 8;
     this.color = '#999';
   }
 
@@ -121,6 +121,13 @@ View = (function() {
     this.ctx.clearRect(0, 0, this.width, this.height);
   }
 
+  View.prototype.drawCircle = function(point) {
+    this.ctx.beginPath();
+    this.ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+    this.ctx.fillStyle = '#FF3C2A';
+    this.ctx.fill();
+  }
+
   return View;
 })();
 
@@ -137,7 +144,7 @@ Controller = (function() {
              };
     })();
     this.maxParticles = 2000;
-    this.emissionRate = 4;
+    this.emissionRate = 5;
     this.view = new View($('canvas')[0]);
     this.particles = [];
     this.emitters = [];
@@ -160,6 +167,17 @@ Controller = (function() {
     this.particles = currentParticles;
   }
 
+  Controller.prototype.plotCircles = function() {
+    for (var i = 0; i < this.emitters.length; i++) {
+      var pos = this.emitters[i].position;
+      this.view.drawCircle(pos);
+    }
+    for (var i = 0; i < this.fields.length; i++) {
+      var pos = this.fields[i].position;
+      this.view.drawCircle(pos);
+    }
+  }
+
   Controller.prototype.addNewParticles = function() {
     if (this.particles.length >= this.maxParticles) return;
     for (var i = 0; i < this.emitters.length; i++) {
@@ -174,13 +192,14 @@ Controller = (function() {
     this.emitters.push(new Emitter(vector, new Vector(2, 0)));
 
     vector = new Vector(this.view.width / 3 * 2, this.view.height / 2);
-    this.fields.push(new Field(vector, 80));
+    this.fields.push(new Field(vector, 3));
   }
 
   Controller.prototype.animate = function() {
     this.addNewParticles();
     this.view.clear();
     this.plotParticles(this.view.width, this.view.height);
+    this.plotCircles();
     window.requestAnimFrame(this.animate.bind(this));
   }
 
