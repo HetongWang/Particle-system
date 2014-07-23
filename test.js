@@ -37,7 +37,7 @@ Particle = (function() {
 
   Particle.prototype.colorVariable = function() {
     var velocity = this.velocity.getMagnitude();
-    this.color[0] = Particle.baseColor[0] * velocity;
+    this.color[0] = Particle.baseColor[0] * 0.8 * velocity;
     this.color[2] = Particle.baseColor[2] * .5 / velocity;
     if (this.color[0] > 255) 
       this.color[0] = 255;
@@ -143,7 +143,7 @@ Controller = (function() {
                window.setTimeout(callback, 1000 / 60);
              };
     })();
-    this.maxParticles = 2000;
+    this.maxParticles = 5000;
     this.emissionRate = 5;
     this.view = new View($('canvas')[0]);
     this.particles = [];
@@ -191,8 +191,8 @@ Controller = (function() {
     var vector = new Vector(this.view.width / 3, this.view.height / 2);
     this.emitters.push(new Emitter(vector, new Vector(2, 0)));
 
-    vector = new Vector(this.view.width / 3 * 2, this.view.height / 2);
-    this.fields.push(new Field(vector, 3));
+    vector = new Vector(this.view.width / 3.5, this.view.height / 2);
+    this.fields.push(new Field(vector, -1));
   }
 
   Controller.prototype.animate = function() {
